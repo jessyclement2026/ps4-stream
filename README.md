@@ -81,6 +81,11 @@ This builds both `ps4-stream-720p.elf` and `ps4-stream-1080p.elf`.
 
 ---
 
+## Brewology Verification
+Official releases for this project are also published on the Brewology PS4 Homebrew Store by **`cutiefly`**.
+
+*Disclaimer: This software is an independent, open-source community project developed using the open-source `ps4-payload-sdk` and is not affiliated with or endorsed by Sony Interactive Entertainment. It is provided "as is", without warranty of any kind, strictly for lawful privacy, educational, and research purposes. Users are solely responsible for complying with their local laws when using this software.*
+
 ## Credits & License
 - **PS4 Capture Backend:** Built on top of the PS4 `libSceAvcap` capture and kernel layout discovery backend from [seregonwar/PBS-Payload](https://github.com/seregonwar/PBS-Payload).
 - **SDK:** [ps4-payload-dev / ps4-payload-sdk](https://github.com/ps4-payload-dev/sdk).
