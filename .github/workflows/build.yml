@@ -39,7 +39,7 @@ jobs:
           if [ ! -d "src/common" ]; then
             git clone --depth 1 https://github.com/seregonwar/PBS-Payload.git _pbs
             mkdir -p src
-            cp -r _pbs/src/* src/
+            cp -r _pbs/payload/src/* src/
             rm -rf _pbs
           fi
 
