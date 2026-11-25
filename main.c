@@ -428,17 +428,21 @@ int main(void) {
     }
 
     char ip[INET_ADDRSTRLEN] = "0.0.0.0";
-    struct ifaddrs *ifap, *ifa;
-    if (getifaddrs(&ifap) == 0) {
-      for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-        if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET && !(ifa->ifa_flags & IFF_LOOPBACK)) {
-          inet_ntop(AF_INET, &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr, ip, sizeof(ip));
-          break;
-        }
+    int tmp_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (tmp_fd >= 0) {
+      struct sockaddr_in dst = {0}, local = {0};
+      socklen_t len = sizeof(local);
+      dst.sin_family = AF_INET;
+      dst.sin_port = htons(53);
+      dst.sin_addr.s_addr = htonl(0x08080808);
+      if (connect(tmp_fd, (struct sockaddr *)&dst, sizeof(dst)) == 0 &&
+          getsockname(tmp_fd, (struct sockaddr *)&local, &len) == 0) {
+        inet_ntop(AF_INET, &local.sin_addr, ip, sizeof(ip));
       }
-      freeifaddrs(ifap);
+      close(tmp_fd);
     }
-    char msg;
+
+    char msg[64];
     snprintf(msg, sizeof(msg), "Stream: %s:5900 (Kill:5901)", ip);
     ps4_notify(msg);
 
