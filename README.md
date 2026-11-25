@@ -85,3 +85,13 @@ This builds both `ps4-stream-720p.elf` and `ps4-stream-1080p.elf`.
 - **PS4 Capture Backend:** Built on top of the PS4 `libSceAvcap` capture and kernel layout discovery backend from [seregonwar/PBS-Payload](https://github.com/seregonwar/PBS-Payload).
 - **SDK:** [ps4-payload-dev / ps4-payload-sdk](https://github.com/ps4-payload-dev/sdk).
 - **License:** **GPL-3.0-or-later** (inherited from `PBS-Payload`).
+
+---
+
+## Support / Donations
+
+If **ps4-stream** helped you stream your PS4 with ultra-low latency and you'd like to support further PS4 homebrew development (such as PS4 audio streaming support and testing on more firmwares):
+
+- **Bitcoin (BTC):** `bc1qt9wxjtq6th3nxmkwg5pa8jhskrn29z6zd7nvum`
+
+Starring the repository (⭐) or sharing test results on other PS4 firmwares also helps a lot!
