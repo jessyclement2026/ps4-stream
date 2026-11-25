@@ -75,7 +75,7 @@ nc -zv <PS4_IP> 5901
 Requires `ps4-payload-sdk` (`orbis-clang`) in `./ps4-payload-sdk`:
 
 ```bash
-make clean && make
+./build.sh
 ```
 This builds both `ps4-stream-720p.elf` and `ps4-stream-1080p.elf`.
 

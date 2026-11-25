@@ -38,6 +38,7 @@ fi
 
 # 4. Build final PS4 payload
 cd "$WORKDIR"
+make clean
 make
 
 echo ""
