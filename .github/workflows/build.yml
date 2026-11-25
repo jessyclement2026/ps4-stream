@@ -25,14 +25,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            bash \
-            build-essential \
-            clang-18 \
-            lld-18 \
-            llvm-18 \
-            git \
-            wget \
-            unzip
+            bash build-essential clang-18 lld-18 llvm-18 git wget unzip
 
       - name: Populate PBS-Payload src directory
         run: |
@@ -57,52 +50,18 @@ jobs:
             ps4-stream-1080p.elf
           if-no-files-found: error
 
-      - name: Create GitHub Release
+      - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cat << 'EOF' > release_notes.md
-          ## Ultra-Low-Latency Hardware H.264 Live Streamer (`ps4-stream`)
-
-          Ultra-low-latency **720p60 / 1080p60 hardware H.264 live streamer** for jailbroken PlayStation 4 consoles, wrapped in standard **188-byte MPEG-TS (`video/mp2t`)** over `TCP_NODELAY`.
-
-          ### Included Payloads
-          - **`ps4-stream-720p.elf`** — `720p @ 60 fps` (PS4 Base / Slim)
-          - **`ps4-stream-1080p.elf`** — `1080p @ 60 fps` (PS4 Pro)
-
-          ### Quick Start
-          1. **Send Payload:** Enable **GoldHEN** (with BinLoader enabled on port `9021`), then send the binary matching your console:
-             ```bash
-             # PS4 Base / Slim (720p60)
-             socat -t 99999999 - TCP:<PS4_IP>:9021 < ps4-stream-720p.elf
-
-             # PS4 Pro (1080p60)
-             socat -t 99999999 - TCP:<PS4_IP>:9021 < ps4-stream-1080p.elf
-             ```
-          2. **Watch Live (Lowest Latency with `mpv`):**
-             ```bash
-             mpv --profile=low-latency --untimed --no-cache http://<PS4_IP>:5900/stream.ts
-             ```
-          3. **Stop Cleanly:**
-             ```bash
-             nc -zv <PS4_IP> 5901
-             ```
-          EOF
-
-          if gh release view "${{ github.ref_name }}" >/dev/null 2>&1; then
-            gh release delete-asset "${{ github.ref_name }}" ps4-stream-720p.elf -y || true
-            gh release delete-asset "${{ github.ref_name }}" ps4-stream-1080p.elf -y || true
-            gh release edit "${{ github.ref_name }}" \
-              --title "ps4-stream Payloads ${{ github.ref_name }}" \
-              --notes-file release_notes.md
-            gh release upload "${{ github.ref_name }}" \
-              ps4-stream-720p.elf \
-              ps4-stream-1080p.elf
+          TAG="${GITHUB_REF_NAME}"
+          NOTES="Low-latency 720p60 / 1080p60 hardware H.264 MPEG-TS live streamer payloads for jailbroken PS4. Stream via http://<PS4_IP>:5900/stream.ts and shut down via TCP port 5901."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release delete-asset "$TAG" ps4-stream-720p.elf -y || true
+            gh release delete-asset "$TAG" ps4-stream-1080p.elf -y || true
+            gh release edit "$TAG" --draft=false --title "ps4-stream $TAG" --notes "$NOTES"
+            gh release upload "$TAG" ps4-stream-720p.elf ps4-stream-1080p.elf
           else
-            gh release create "${{ github.ref_name }}" \
-              ps4-stream-720p.elf \
-              ps4-stream-1080p.elf \
-              --title "ps4-stream Payloads ${{ github.ref_name }}" \
-              --notes-file release_notes.md
+            gh release create "$TAG" ps4-stream-720p.elf ps4-stream-1080p.elf --title "ps4-stream $TAG" --notes "$NOTES"
           fi
