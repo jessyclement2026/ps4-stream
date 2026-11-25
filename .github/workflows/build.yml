@@ -91,10 +91,14 @@ jobs:
           EOF
 
           if gh release view "${{ github.ref_name }}" >/dev/null 2>&1; then
+            gh release delete-asset "${{ github.ref_name }}" ps4-stream-720p.elf -y || true
+            gh release delete-asset "${{ github.ref_name }}" ps4-stream-1080p.elf -y || true
+            gh release edit "${{ github.ref_name }}" \
+              --title "ps4-stream Payloads ${{ github.ref_name }}" \
+              --notes-file release_notes.md
             gh release upload "${{ github.ref_name }}" \
               ps4-stream-720p.elf \
-              ps4-stream-1080p.elf \
-              --clobber
+              ps4-stream-1080p.elf
           else
             gh release create "${{ github.ref_name }}" \
               ps4-stream-720p.elf \
