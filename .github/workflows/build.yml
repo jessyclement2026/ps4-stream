@@ -1,0 +1,91 @@
+name: Build ps4-stream Payloads
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            clang-18 \
+            lld-18 \
+            llvm-18 \
+            wget \
+            unzip
+
+      - name: Download ps4-payload-sdk
+        run: |
+          wget -q https://github.com/ps4-payload-dev/sdk/releases/latest/download/ps4-payload-sdk.zip
+          unzip -oq ps4-payload-sdk.zip
+
+      - name: Build payloads
+        run: |
+          make clean && make
+
+      - name: Upload ELF artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps4-stream-elfs
+          path: |
+            ps4-stream-720p.elf
+            ps4-stream-1080p.elf
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ps4-stream ${{ github.ref_name }}
+          files: |
+            ps4-stream-720p.elf
+            ps4-stream-1080p.elf
+          generate_release_notes: true
+          body: |
+            ## Ultra-Low-Latency Hardware H.264 Live Streamer for Jailbroken PS4
+
+            Stream your PS4 screen live at **720p60 / 1080p60** (~20–40 ms latency) to Linux, macOS, Windows, Android, or iOS over standard **188-byte MPEG-TS (`video/mp2t`)** using **mpv**, **ffplay**, or **VLC**.
+
+            ### Included Payloads
+            - **`ps4-stream-720p.elf`** — `720p @ 60 fps` (Recommended for PS4 Base / Slim)
+            - **`ps4-stream-1080p.elf`** — `1080p @ 60 fps` (For PS4 Pro)
+
+            ### Quick Start
+            1. **Send Payload:** Enable **GoldHEN** (with BinLoader enabled on port `9021`), then send the binary matching your console:
+               ```bash
+               # PS4 Base / Slim (720p60)
+               socat -t 99999999 - TCP:<PS4_IP>:9021 < ps4-stream-720p.elf
+
+               # PS4 Pro (1080p60)
+               socat -t 99999999 - TCP:<PS4_IP>:9021 < ps4-stream-1080p.elf
+               ```
+            2. **Watch Live (Lowest Latency with `mpv`):**
+               ```bash
+               mpv --profile=low-latency --untimed --no-cache http://<PS4_IP>:5900/stream.ts
+               ```
+               *(You can also open `http://<PS4_IP>:5900/stream.ts` in **ffplay**, **VLC**, or **mpv-android**).*
+            3. **Graceful Shutdown (Port `5901`):**
+               ```bash
+               nc -zv <PS4_IP> 5901
+               ```
+
+            > **Note:** Video only (PS4 audio capture is not implemented). Tested on FW 11.00.
