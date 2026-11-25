@@ -427,8 +427,9 @@ int main(void) {
         goto cleanup;
     }
 
-    ps4_notify(HEIGHT == 1080 ? "PS4 1080p60 TS Stream ready (5900) | Kill (5901)"
-                              : "PS4 720p60 TS Stream ready (5900) | Kill (5901)");
+    char msg[64];
+    snprintf(msg, sizeof(msg), "Stream: %s:5900 (Kill:5901)", ip);
+    ps4_notify(msg);
 
     int stop_server = 0;
     while (!stop_server) {
