@@ -427,7 +427,18 @@ int main(void) {
         goto cleanup;
     }
 
-    char msg[64];
+    char ip[INET_ADDRSTRLEN] = "0.0.0.0";
+    struct ifaddrs *ifap, *ifa;
+    if (getifaddrs(&ifap) == 0) {
+      for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET && !(ifa->ifa_flags & IFF_LOOPBACK)) {
+          inet_ntop(AF_INET, &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr, ip, sizeof(ip));
+          break;
+        }
+      }
+      freeifaddrs(ifap);
+    }
+    char msg;
     snprintf(msg, sizeof(msg), "Stream: %s:5900 (Kill:5901)", ip);
     ps4_notify(msg);
 
