@@ -1,6 +1,6 @@
 SDK ?= $(CURDIR)/ps4-payload-sdk
 CC := $(SDK)/bin/orbis-clang
-LINKER := $(shell find $(SDK) -name '*.x' | head -n 1)
+LINKER := $(SDK)/ldscripts/elf_x86_64.x
 
 CFLAGS := -O2 -Wall -fPIC -ffreestanding -fno-builtin \
           -DPBS_PS4 -DPBS_PS4_DYNAMIC_LAYOUT=1 -DPBS_PS4_REMOTE_AVCAP=1 \

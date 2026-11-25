@@ -30,26 +30,20 @@ jobs:
             clang-18 \
             lld-18 \
             llvm-18 \
-            autoconf \
-            automake \
-            libtool \
-            pkg-config \
-            cmake \
-            meson \
-            socat \
             git \
             wget \
-            unzip \
-            python3
+            unzip
 
-      - name: Download ps4-payload-sdk
+      - name: Populate PBS-Payload src directory
         run: |
-          wget -q https://github.com/ps4-payload-dev/sdk/releases/latest/download/ps4-payload-sdk.zip
-          unzip -oq ps4-payload-sdk.zip
+          if [ ! -d "src/common" ]; then
+            git clone --depth 1 https://github.com/seregonwar/PBS-Payload.git _pbs
+            mkdir -p src
+            cp -r _pbs/src/* src/
+            rm -rf _pbs
+          fi
 
-      - name: Build payload
-        env:
-          PS4SDK: ${{ github.workspace }}/ps4-payload-sdk
+      - name: Build payloads
         run: |
           chmod +x build.sh
           ./build.sh
@@ -80,12 +74,6 @@ jobs:
             ### Included Payloads
             - **`ps4-stream-720p.elf`** — `720p @ 60 fps` (PS4 Base / Slim)
             - **`ps4-stream-1080p.elf`** — `1080p @ 60 fps` (PS4 Pro)
-
-            ### Key Features
-            - **Hardware H.264 Capture:** Uses the PS4's built-in `libSceAvcap` hardware encoder (`720p60` on Base/Slim PS4; `1080p60` on PS4 Pro).
-            - **Standard MPEG-TS over HTTP & Raw TCP (`Port 5900`):** Auto-detects HTTP (`http://<PS4_IP>:5900/stream.ts`) and raw TCP (`tcp://<PS4_IP>:5900`) on the same port.
-            - **Near-Zero Latency:** Built with `TCP_NODELAY`, real wall-clock 90 kHz PCR/PTS timestamps, and zero transcoding on the PS4 (~20–40 ms latency).
-            - **Fresh-Boot Safe & Graceful Shutdown (`Port 5901`):** Waits for `SceRemotePlay` after boot and cleanly releases `Avcap` via TCP port `5901`.
 
             ### Quick Start
             1. **Send Payload:** Enable **GoldHEN** (with BinLoader enabled on port `9021`), then send the binary matching your console:
