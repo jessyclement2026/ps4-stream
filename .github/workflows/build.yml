@@ -2,7 +2,6 @@ name: Build ps4-stream Payloads
 
 on:
   push:
-    branches: [ main ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
@@ -21,8 +20,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install build dependencies
         run: |
@@ -33,27 +30,34 @@ jobs:
             clang-18 \
             lld-18 \
             llvm-18 \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            cmake \
+            meson \
+            socat \
             git \
             wget \
-            unzip
+            unzip \
+            python3
 
       - name: Download ps4-payload-sdk
         run: |
           wget -q https://github.com/ps4-payload-dev/sdk/releases/latest/download/ps4-payload-sdk.zip
           unzip -oq ps4-payload-sdk.zip
 
-      - name: Build payloads
+      - name: Build payload
         env:
           PS4SDK: ${{ github.workspace }}/ps4-payload-sdk
-          SDK: ${{ github.workspace }}/ps4-payload-sdk
         run: |
           chmod +x build.sh
           ./build.sh
 
-      - name: Upload ELF artifacts
+      - name: Upload ps4-stream artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ps4-stream-elfs
+          name: ps4-stream-elf
           path: |
             ps4-stream-720p.elf
             ps4-stream-1080p.elf
@@ -63,19 +67,25 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          name: ps4-stream ${{ github.ref_name }}
+          name: ps4-stream Payloads ${{ github.ref_name }}
           files: |
             ps4-stream-720p.elf
             ps4-stream-1080p.elf
           generate_release_notes: true
           body: |
-            ## Ultra-Low-Latency Hardware H.264 Live Streamer for Jailbroken PS4
+            ## Ultra-Low-Latency Hardware H.264 Live Streamer (`ps4-stream`)
 
-            Stream your PS4 screen live at **720p60 / 1080p60** (~20–40 ms latency) to Linux, macOS, Windows, Android, or iOS over standard **188-byte MPEG-TS (`video/mp2t`)** using **mpv**, **ffplay**, or **VLC**.
+            Ultra-low-latency **720p60 / 1080p60 hardware H.264 live streamer** for jailbroken PlayStation 4 consoles, wrapped in standard **188-byte MPEG-TS (`video/mp2t`)** over `TCP_NODELAY`.
 
             ### Included Payloads
-            - **`ps4-stream-720p.elf`** — `720p @ 60 fps` (Recommended for PS4 Base / Slim)
-            - **`ps4-stream-1080p.elf`** — `1080p @ 60 fps` (For PS4 Pro)
+            - **`ps4-stream-720p.elf`** — `720p @ 60 fps` (PS4 Base / Slim)
+            - **`ps4-stream-1080p.elf`** — `1080p @ 60 fps` (PS4 Pro)
+
+            ### Key Features
+            - **Hardware H.264 Capture:** Uses the PS4's built-in `libSceAvcap` hardware encoder (`720p60` on Base/Slim PS4; `1080p60` on PS4 Pro).
+            - **Standard MPEG-TS over HTTP & Raw TCP (`Port 5900`):** Auto-detects HTTP (`http://<PS4_IP>:5900/stream.ts`) and raw TCP (`tcp://<PS4_IP>:5900`) on the same port.
+            - **Near-Zero Latency:** Built with `TCP_NODELAY`, real wall-clock 90 kHz PCR/PTS timestamps, and zero transcoding on the PS4 (~20–40 ms latency).
+            - **Fresh-Boot Safe & Graceful Shutdown (`Port 5901`):** Waits for `SceRemotePlay` after boot and cleanly releases `Avcap` via TCP port `5901`.
 
             ### Quick Start
             1. **Send Payload:** Enable **GoldHEN** (with BinLoader enabled on port `9021`), then send the binary matching your console:
@@ -90,10 +100,7 @@ jobs:
                ```bash
                mpv --profile=low-latency --untimed --no-cache http://<PS4_IP>:5900/stream.ts
                ```
-               *(You can also open `http://<PS4_IP>:5900/stream.ts` in **ffplay**, **VLC**, or **mpv-android**).*
-            3. **Graceful Shutdown (Port `5901`):**
+            3. **Stop Cleanly:**
                ```bash
                nc -zv <PS4_IP> 5901
                ```
-
-            > **Note:** Video only (PS4 audio capture is not implemented). Tested on FW 11.00.
